@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vibe Hub 👾</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0d0d0f;
+  --bg2: #131316;
+  --bg3: #1a1a1f;
+  --bg4: #222228;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --border3: rgba(255,255,255,0.22);
+  --text: #e8e8f0;
+  --text2: #888899;
+  --text3: #555566;
+  --accent: #7c6fcd;
+  --accent2: #9d8fee;
+  --accent-bg: rgba(124,111,205,0.12);
+  --accent-border: rgba(124,111,205,0.35);
+  --green: #3ecf8e;
+  --green-bg: rgba(62,207,142,0.10);
+  --green-border: rgba(62,207,142,0.30);
+  --amber: #f59e0b;
+  --amber-bg: rgba(245,158,11,0.10);
+  --amber-border: rgba(245,158,11,0.30);
+  --red: #ef4444;
+  --red-bg: rgba(239,68,68,0.10);
+  --red-border: rgba(239,68,68,0.28);
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Space Grotesk', sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  padding: 0;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* cyberpunk grid floor */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(124,111,205,0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124,111,205,0.07) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none; z-index: 0;
+}
+
+/* scanline overlay */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px
+  );
+  pointer-events: none; z-index: 0;
+}
+
+/* glow orbs */
+.cp-orb {
+  position: fixed; border-radius: 50%;
+  pointer-events: none; z-index: 0;
+  filter: blur(90px); opacity: 0.18;
+}
+.cp-orb-1 {
+  width: 600px; height: 600px;
+  top: -200px; left: -150px;
+  background: radial-gradient(circle, #7c6fcd 0%, transparent 70%);
+}
+.cp-orb-2 {
+  width: 500px; height: 500px;
+  bottom: -180px; right: -120px;
+  background: radial-gradient(circle, #3ecf8e 0%, transparent 70%);
+}
+.cp-orb-3 {
+  width: 350px; height: 350px;
+  top: 40%; left: 55%;
+  background: radial-gradient(circle, #f59e0b 0%, transparent 70%);
+  opacity: 0.08;
+}
+
+#app { position: relative; z-index: 1; }
+
+#app { max-width: 1100px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+
+.header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 2.5rem; gap: 16px; flex-wrap: wrap;
+}
+
+.logo {
+  font-family: var(--mono);
+  font-size: 12px; font-weight: 600;
+  color: var(--accent2);
+  letter-spacing: 0.08em;
+  margin-bottom: 6px; opacity: 0.8;
+}
+
+.title {
+  font-size: 32px; font-weight: 800;
+  color: var(--text); line-height: 1;
+  letter-spacing: -1px;
+}
+.title .dim { color: var(--text3); }
+.title .hi { color: var(--accent2); }
+
+.subtitle {
+  font-size: 12px; font-weight: 600;
+  color: var(--text3); margin-top: 6px;
+  font-family: var(--mono);
+}
+
+.header-right {
+  display: flex; align-items: center; gap: 10px; padding-top: 8px;
+}
+
+.kbd {
+  font-family: var(--mono); font-size: 11px;
+  color: var(--text3); border: 1px solid var(--border2);
+  background: var(--bg3); border-radius: 5px;
+  padding: 3px 7px; white-space: nowrap;
+}
+
+.add-btn {
+  background: var(--accent); color: #fff; border: none;
+  border-radius: 8px; padding: 11px 22px;
+  font-size: 14px; font-weight: 700;
+  cursor: pointer; font-family: var(--sans);
+  transition: background 0.15s, transform 0.1s;
+}
+.add-btn:hover { background: var(--accent2); }
+.add-btn:active { transform: scale(0.97); }
+
+.stats-bar {
+  display: flex; gap: 10px;
+  margin-bottom: 1.5rem; flex-wrap: wrap;
+}
+
+.stat-chip {
+  font-family: var(--mono); font-size: 12px; font-weight: 600;
+  padding: 6px 14px; border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg3); color: var(--text2);
+  display: flex; align-items: center; gap: 6px;
+  cursor: pointer; transition: all 0.12s; user-select: none;
+}
+.stat-chip:hover { border-color: var(--border2); color: var(--text); }
+.stat-chip .dot { width: 6px; height: 6px; border-radius: 50%; }
+.stat-chip.active-all { border-color: var(--border3); color: var(--text); background: var(--bg4); }
+.stat-chip.active-idea { border-color: var(--accent-border); color: var(--accent2); background: var(--accent-bg); }
+.stat-chip.active-building { border-color: var(--amber-border); color: var(--amber); background: var(--amber-bg); }
+.stat-chip.active-live { border-color: var(--green-border); color: var(--green); background: var(--green-bg); }
+.stat-chip.active-paused { border-color: var(--border2); color: var(--text2); background: var(--bg4); }
+
+.controls {
+  display: flex; gap: 10px;
+  margin-bottom: 1.25rem; flex-wrap: wrap;
+}
+
+.search-wrap { flex: 1; min-width: 220px; position: relative; }
+.search-icon {
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  color: var(--text3); font-size: 15px; pointer-events: none;
+}
+
+.search-wrap input {
+  width: 100%; background: var(--bg3);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 14px 10px 36px;
+  font-size: 14px; font-weight: 500; font-family: var(--sans);
+  color: var(--text); outline: none; transition: border-color 0.12s;
+}
+.search-wrap input::placeholder { color: var(--text3); }
+.search-wrap input:focus { border-color: var(--accent-border); background: var(--bg4); }
+
+.ctrl-select {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 14px;
+  font-size: 12px; font-weight: 600; font-family: var(--mono);
+  color: var(--text2); cursor: pointer; outline: none;
+}
+.ctrl-select:focus, .ctrl-select:hover { border-color: var(--border2); }
+
+.count-bar {
+  font-family: var(--mono); font-size: 12px;
+  color: var(--text3); margin-bottom: 1rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+.card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden;
+  transition: border-color 0.15s, transform 0.12s, background 0.12s;
+  position: relative;
+}
+.card:hover { border-color: var(--border2); background: var(--bg3); transform: translateY(-2px); }
+
+.card-accent-bar { height: 2px; width: 100%; }
+.bar-idea { background: linear-gradient(90deg, var(--accent), transparent); }
+.bar-building { background: linear-gradient(90deg, var(--amber), transparent); }
+.bar-live { background: linear-gradient(90deg, var(--green), transparent); }
+.bar-paused { background: linear-gradient(90deg, var(--text3), transparent); }
+
+.card-body { padding: 16px 18px 18px; }
+
+.card-top {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 10px; margin-bottom: 10px;
+}
+
+.card-icon-name { display: flex; align-items: center; gap: 10px; }
+.card-emoji { font-size: 24px; line-height: 1; flex-shrink: 0; }
+.card-name { font-size: 16px; font-weight: 700; color: var(--text); line-height: 1.2; }
+
+.card-desc {
+  font-size: 13px; font-weight: 500; color: var(--text2);
+  margin-bottom: 12px; line-height: 1.55;
+  display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+
+.status-badge {
+  font-family: var(--mono); font-size: 11px; font-weight: 600;
+  border-radius: 5px; padding: 3px 9px;
+  white-space: nowrap; flex-shrink: 0; letter-spacing: 0.03em;
+}
+.badge-idea { background: var(--accent-bg); color: var(--accent2); border: 1px solid var(--accent-border); }
+.badge-building { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+.badge-live { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+.badge-paused { background: var(--bg4); color: var(--text3); border: 1px solid var(--border2); }
+
+.card-stack { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+.stack-pill {
+  font-family: var(--mono); font-size: 11px; font-weight: 600;
+  background: var(--bg4); color: var(--text2);
+  border: 1px solid var(--border); border-radius: 4px; padding: 2px 8px;
+}
+
+.card-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
+.tag-pill {
+  font-size: 11px; font-weight: 600;
+  background: var(--accent-bg); color: var(--accent2);
+  border: 1px solid var(--accent-border); border-radius: 4px; padding: 2px 8px;
+}
+
+.card-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 10px; border-top: 1px solid var(--border);
+}
+
+.card-links { display: flex; gap: 8px; }
+.link-btn {
+  font-family: var(--mono); font-size: 11px; font-weight: 600;
+  color: var(--text2); text-decoration: none;
+  background: var(--bg4); border: 1px solid var(--border);
+  padding: 4px 10px; border-radius: 5px;
+  transition: color 0.12s, border-color 0.12s;
+}
+.link-btn:hover { color: var(--accent2); border-color: var(--accent-border); }
+
+.card-actions { display: flex; gap: 4px; }
+.action-btn {
+  background: none; border: 1px solid transparent;
+  border-radius: 5px; color: var(--text3);
+  cursor: pointer; font-size: 13px;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.12s; font-family: inherit;
+}
+.action-btn:hover { background: var(--bg4); border-color: var(--border); color: var(--text2); }
+.action-btn.del:hover { color: var(--red); border-color: var(--red-border); background: var(--red-bg); }
+
+.empty-state { grid-column: 1/-1; text-align: center; padding: 5rem 1rem; }
+.empty-big { font-size: 48px; margin-bottom: 14px; opacity: 0.4; }
+.empty-title { font-size: 16px; font-weight: 700; color: var(--text2); margin-bottom: 6px; }
+.empty-sub { font-family: var(--mono); font-size: 12px; color: var(--text3); }
+
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200; padding: 1rem;
+}
+
+.modal {
+  background: var(--bg2); border: 1px solid var(--border2);
+  border-radius: 16px; padding: 28px;
+  width: 100%; max-width: 540px;
+  max-height: 90vh; overflow-y: auto;
+}
+
+.modal-header {
+  display: flex; align-items: center;
+  justify-content: space-between; margin-bottom: 22px;
+}
+.modal-title { font-size: 18px; font-weight: 800; color: var(--text); }
+.modal-close {
+  background: none; border: 1px solid var(--border);
+  color: var(--text3); border-radius: 6px;
+  width: 30px; height: 30px; cursor: pointer; font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.12s; font-family: inherit;
+}
+.modal-close:hover { color: var(--text); border-color: var(--border2); }
+
+.form-row { display: flex; gap: 12px; }
+.form-row .form-group { flex: 1; }
+.form-group { margin-bottom: 15px; }
+.form-label {
+  display: block; font-family: var(--mono);
+  font-size: 11px; font-weight: 600; color: var(--text3);
+  margin-bottom: 6px; letter-spacing: 0.05em; text-transform: uppercase;
+}
+
+.form-input, .form-textarea, .form-select {
+  width: 100%; background: var(--bg3); color: var(--text);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 13px; font-size: 14px; font-weight: 500;
+  font-family: var(--sans); outline: none; transition: border-color 0.12s;
+}
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+  border-color: var(--accent-border); background: var(--bg4);
+}
+.form-input::placeholder, .form-textarea::placeholder { color: var(--text3); }
+.form-textarea { resize: vertical; min-height: 76px; line-height: 1.5; }
+.emoji-input { font-size: 22px; text-align: center; padding: 8px 13px; }
+
+.tag-input-wrap {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px 10px;
+  display: flex; flex-wrap: wrap; gap: 5px;
+  min-height: 42px; cursor: text; transition: border-color 0.12s;
+}
+.tag-input-wrap:focus-within { border-color: var(--accent-border); background: var(--bg4); }
+.ti-tag {
+  background: var(--accent-bg); color: var(--accent2);
+  border: 1px solid var(--accent-border); border-radius: 4px;
+  padding: 2px 8px; font-size: 12px; font-weight: 600;
+  display: flex; align-items: center; gap: 4px;
+}
+.ti-tag .rm {
+  cursor: pointer; opacity: 0.7; font-size: 11px;
+  background: none; border: none; color: inherit;
+  padding: 0; line-height: 1; font-family: inherit;
+}
+.ti-tag .rm:hover { opacity: 1; }
+.tag-input-wrap input {
+  background: none; border: none; outline: none;
+  font-size: 13px; font-weight: 500; font-family: var(--sans);
+  color: var(--text); min-width: 80px; flex: 1; padding: 2px 4px;
+}
+.tag-input-wrap input::placeholder { color: var(--text3); font-size: 12px; }
+
+.modal-actions {
+  display: flex; gap: 10px; justify-content: flex-end;
+  margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border);
+}
+.btn-cancel {
+  border-radius: 8px; padding: 10px 20px;
+  font-size: 14px; font-weight: 700; font-family: var(--sans);
+  border: 1px solid var(--border2); background: none;
+  color: var(--text2); cursor: pointer; transition: all 0.12s;
+}
+.btn-cancel:hover { color: var(--text); border-color: var(--border3); }
+.btn-save {
+  background: var(--accent); color: #fff; border: none;
+  border-radius: 8px; padding: 10px 24px;
+  font-size: 14px; font-weight: 700; font-family: var(--sans);
+  cursor: pointer; transition: background 0.12s;
+}
+.btn-save:hover { background: var(--accent2); }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="cp-orb cp-orb-1"></div>
+<div class="cp-orb cp-orb-2"></div>
+<div class="cp-orb cp-orb-3"></div>
+<div id="app">
+  <div class="header">
+    <div>
+      <div class="logo">// vibe-coding-hub v1.0</div>
+      <div class="title">My <span class="hi">Vibe</span><span class="dim"> Lab</span></div>
+      <div class="subtitle">_ all my side projects in one place</div>
+    </div>
+    <div class="header-right">
+      <span class="kbd">⌘K new</span>
+      <button class="add-btn" onclick="openModal()">+ 新增 MVP</button>
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-chip active-all" data-filter="all" onclick="setFilter('all')">
+      <span class="dot" style="background:var(--text3)"></span> 全部 <span id="cnt-all">0</span>
+    </div>
+    <div class="stat-chip" data-filter="idea" onclick="setFilter('idea')">
+      <span class="dot" style="background:var(--accent2)"></span> 💡 Idea <span id="cnt-idea">0</span>
+    </div>
+    <div class="stat-chip" data-filter="building" onclick="setFilter('building')">
+      <span class="dot" style="background:var(--amber)"></span> 🔨 Building <span id="cnt-building">0</span>
+    </div>
+    <div class="stat-chip" data-filter="live" onclick="setFilter('live')">
+      <span class="dot" style="background:var(--green)"></span> 🚀 Live <span id="cnt-live">0</span>
+    </div>
+    <div class="stat-chip" data-filter="paused" onclick="setFilter('paused')">
+      <span class="dot" style="background:var(--text3)"></span> ⏸ Paused <span id="cnt-paused">0</span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="search" placeholder="搜尋專案、標籤、stack..." oninput="render()" />
+    </div>
+    <select class="ctrl-select" id="sort" onchange="render()">
+      <option value="newest">最新優先</option>
+      <option value="oldest">最舊優先</option>
+      <option value="name">名稱 A–Z</option>
+      <option value="status">依狀態</option>
+    </select>
+  </div>
+
+  <div class="count-bar" id="count-bar">0 projects</div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<!-- Modal -->
+<div id="modal-backdrop" class="modal-backdrop" style="display:none" onclick="handleBackdropClick(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">新增 MVP</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group" style="max-width:80px">
+        <label class="form-label">Emoji</label>
+        <input class="form-input emoji-input" id="f-emoji" maxlength="2" placeholder="🚀" />
+      </div>
+      <div class="form-group" style="flex:1">
+        <label class="form-label">專案名稱 *</label>
+        <input class="form-input" id="f-name" placeholder="My Awesome MVP" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">一句話描述</label>
+      <textarea class="form-textarea" id="f-desc" placeholder="這個 MVP 解決什麼問題？"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">狀態</label>
+      <select class="form-select" id="f-status">
+        <option value="idea">💡 Idea</option>
+        <option value="building">🔨 Building</option>
+        <option value="live">🚀 Live</option>
+        <option value="paused">⏸ Paused</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Tech Stack（逗號分隔）</label>
+      <input class="form-input" id="f-stack" placeholder="Next.js, Supabase, Tailwind, OpenAI..." />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Tags（按 Enter 新增）</label>
+      <div class="tag-input-wrap" id="tag-wrap" onclick="document.getElementById('tag-input').focus()">
+        <input type="text" id="tag-input" placeholder="輸入標籤後按 Enter" onkeydown="handleTagKey(event)" />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">GitHub</label>
+        <input class="form-input" id="f-github" placeholder="https://github.com/..." />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Demo</label>
+        <input class="form-input" id="f-demo" placeholder="https://..." />
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">取消</button>
+      <button class="btn-save" onclick="saveProject()">儲存專案</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://komlggruuhtrbczfvgzg.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_smx4iQ08qXnjoVfwnm8yFw_3_sVL_mE';
+const TABLE = 'mvps';
+
+async function sbFetch(path, opts = {}) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+    ...opts,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': opts.prefer || '',
+      ...(opts.headers || {})
+    }
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+let projects = [];
+let filter = 'all';
+let editId = null;
+let modalTags = [];
+let loading = false;
+
+function setLoading(v) {
+  loading = v;
+  const btn = document.querySelector('.add-btn');
+  if (btn) btn.style.opacity = v ? '0.5' : '1';
+}
+
+function toLocal(row) {
+  return {
+    id: row.id,
+    created_at: row.created_at,
+    emoji: row.emoji,
+    name: row.name,
+    desc: row.description,
+    status: row.status,
+    stack: row.stack || [],
+    tags: row.tags || [],
+    github: row.github_url,
+    demo: row.demo_url,
+  };
+}
+
+function toRow(data) {
+  return {
+    emoji: data.emoji || '🛸',
+    name: data.name,
+    description: data.desc,
+    status: data.status,
+    stack: data.stack || [],
+    tags: data.tags || [],
+    github_url: data.github || null,
+    demo_url: data.demo || null,
+  };
+}
+
+async function load() {
+  setLoading(true);
+  setStatus('loading');
+  try {
+    const rows = await sbFetch(TABLE + '?order=created_at.desc&select=*');
+    projects = (rows || []).map(toLocal);
+    setStatus('ok');
+    render();
+  } catch(e) {
+    document.getElementById('count-bar').innerHTML =
+      `<span style="color:var(--red)">⚠ 連線失敗：${e.message}</span>`;
+    document.getElementById('grid').innerHTML =
+      `<div class="empty-state"><div class="empty-big">⚠</div>
+       <div class="empty-title">無法連接 Supabase</div>
+       <div class="empty-sub" style="color:var(--red);white-space:pre-wrap;max-width:500px;margin:8px auto">${e.message}</div>
+       </div>`;
+  }
+  setLoading(false);
+}
+
+function setStatus(state, msg) {
+  const el = document.getElementById('count-bar');
+  if (state === 'loading') { el.textContent = '// connecting to supabase...'; return; }
+  if (state === 'error') { el.innerHTML = `<span style="color:var(--red)">⚠ ${msg}</span>`; return; }
+}
+
+const STATUS_ORDER = { idea:0, building:1, live:2, paused:3 };
+
+function getFiltered() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const sort = document.getElementById('sort').value;
+  let list = projects.filter(p => {
+    if (filter !== 'all' && p.status !== filter) return false;
+    if (q) {
+      const hay = [p.name, p.desc||'', ...(p.stack||[]), ...(p.tags||[])].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  if (sort === 'newest') list.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+  else if (sort === 'oldest') list.sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+  else if (sort === 'name') list.sort((a,b) => a.name.localeCompare(b.name));
+  else if (sort === 'status') list.sort((a,b) => (STATUS_ORDER[a.status]||0) - (STATUS_ORDER[b.status]||0));
+  return list;
+}
+
+function statusLabel(s) {
+  return { idea:'💡 Idea', building:'🔨 Building', live:'🚀 Live', paused:'⏸ Paused' }[s] || s;
+}
+
+function setFilter(f) {
+  filter = f;
+  document.querySelectorAll('.stat-chip').forEach(c => {
+    c.className = 'stat-chip';
+    if (c.dataset.filter === f) c.classList.add('active-' + f);
+  });
+  render();
+}
+
+function updateCounts() {
+  document.getElementById('cnt-all').textContent = projects.length;
+  ['idea','building','live','paused'].forEach(s => {
+    document.getElementById('cnt-' + s).textContent = projects.filter(p => p.status === s).length;
+  });
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function render() {
+  updateCounts();
+  const list = getFiltered();
+  const grid = document.getElementById('grid');
+  document.getElementById('count-bar').textContent = list.length + ' project' + (list.length !== 1 ? 's' : '');
+
+  if (!list.length) {
+    grid.innerHTML = `<div class="empty-state">
+      <div class="empty-big">👾</div>
+      <div class="empty-title">還沒有 MVP</div>
+      <div class="empty-sub">// press ⌘K or click + 新增 MVP to get started</div>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map(p => {
+    const stackHtml = (p.stack||[]).map(s => `<span class="stack-pill">${esc(s)}</span>`).join('');
+    const tagsHtml = (p.tags||[]).map(t => `<span class="tag-pill">${esc(t)}</span>`).join('');
+    const linksHtml = [
+      p.github ? `<a class="link-btn" href="${esc(p.github)}" target="_blank">↗ GitHub</a>` : '',
+      p.demo ? `<a class="link-btn" href="${esc(p.demo)}" target="_blank">↗ Demo</a>` : ''
+    ].join('');
+    return `<div class="card">
+      <div class="card-accent-bar bar-${p.status}"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-icon-name">
+            <span class="card-emoji">${p.emoji||'🛸'}</span>
+            <span class="card-name">${esc(p.name)}</span>
+          </div>
+          <span class="status-badge badge-${p.status}">${statusLabel(p.status)}</span>
+        </div>
+        ${p.desc ? `<div class="card-desc">${esc(p.desc)}</div>` : ''}
+        ${stackHtml ? `<div class="card-stack">${stackHtml}</div>` : ''}
+        ${tagsHtml ? `<div class="card-tags">${tagsHtml}</div>` : ''}
+        <div class="card-footer">
+          <div class="card-links">${linksHtml}</div>
+          <div class="card-actions">
+            <button class="action-btn" onclick="editProject('${p.id}')">✎</button>
+            <button class="action-btn del" onclick="deleteProject('${p.id}')">✕</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function handleTagKey(e) {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    const val = e.target.value.trim().replace(/,$/, '');
+    if (val && !modalTags.includes(val)) { modalTags.push(val); renderModalTags(); }
+    e.target.value = '';
+  } else if (e.key === 'Backspace' && !e.target.value) {
+    modalTags.pop(); renderModalTags();
+  }
+}
+
+function renderModalTags() {
+  const wrap = document.getElementById('tag-wrap');
+  const input = document.getElementById('tag-input');
+  wrap.querySelectorAll('.ti-tag').forEach(el => el.remove());
+  modalTags.forEach((t, i) => {
+    const el = document.createElement('span');
+    el.className = 'ti-tag';
+    el.innerHTML = `${esc(t)}<button class="rm" onclick="removeTag(${i})">✕</button>`;
+    wrap.insertBefore(el, input);
+  });
+}
+
+function removeTag(i) { modalTags.splice(i,1); renderModalTags(); }
+
+function openModal() {
+  editId = null; modalTags = [];
+  document.getElementById('modal-title').textContent = '新增 MVP';
+  ['f-name','f-desc','f-stack','f-github','f-demo','f-emoji'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-status').value = 'idea';
+  document.getElementById('tag-input').value = '';
+  renderModalTags();
+  document.getElementById('modal-backdrop').style.display = 'flex';
+  setTimeout(() => document.getElementById('f-name').focus(), 50);
+}
+
+function closeModal() {
+  document.getElementById('modal-backdrop').style.display = 'none';
+  editId = null;
+}
+
+function handleBackdropClick(e) {
+  if (e.target === document.getElementById('modal-backdrop')) closeModal();
+}
+
+function editProject(id) {
+  const p = projects.find(x => x.id === id);
+  if (!p) return;
+  editId = id; modalTags = [...(p.tags||[])];
+  document.getElementById('modal-title').textContent = '編輯 MVP';
+  document.getElementById('f-emoji').value = p.emoji||'';
+  document.getElementById('f-name').value = p.name;
+  document.getElementById('f-desc').value = p.desc||'';
+  document.getElementById('f-status').value = p.status;
+  document.getElementById('f-stack').value = (p.stack||[]).join(', ');
+  document.getElementById('f-github').value = p.github||'';
+  document.getElementById('f-demo').value = p.demo||'';
+  document.getElementById('tag-input').value = '';
+  renderModalTags();
+  document.getElementById('modal-backdrop').style.display = 'flex';
+}
+
+async function deleteProject(id) {
+  if (!confirm('刪除這個 MVP？')) return;
+  setLoading(true);
+  try {
+    await sbFetch(TABLE + '?id=eq.' + id, { method: 'DELETE' });
+    projects = projects.filter(p => p.id !== id);
+    render();
+  } catch(e) { alert('刪除失敗：' + e.message); }
+  setLoading(false);
+}
+
+async function saveProject() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { document.getElementById('f-name').focus(); return; }
+  const split = s => s.split(',').map(x => x.trim()).filter(Boolean);
+  const data = {
+    emoji: document.getElementById('f-emoji').value.trim() || '🛸',
+    name,
+    desc: document.getElementById('f-desc').value.trim(),
+    status: document.getElementById('f-status').value,
+    stack: split(document.getElementById('f-stack').value),
+    tags: [...modalTags],
+    github: document.getElementById('f-github').value.trim(),
+    demo: document.getElementById('f-demo').value.trim(),
+  };
+  setLoading(true);
+  try {
+    if (editId) {
+      await sbFetch(TABLE + '?id=eq.' + editId, {
+        method: 'PATCH',
+        prefer: 'return=representation',
+        body: JSON.stringify(toRow(data))
+      });
+    } else {
+      await sbFetch(TABLE, {
+        method: 'POST',
+        prefer: 'return=representation',
+        body: JSON.stringify(toRow(data))
+      });
+    }
+    closeModal();
+    await load();
+  } catch(e) { alert('儲存失敗：' + e.message); }
+  setLoading(false);
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    if (document.getElementById('modal-backdrop').style.display === 'none') openModal();
+  }
+  if (e.key === 'Escape') closeModal();
+});
+
+load();
+</script>
+</body>
+</html>
